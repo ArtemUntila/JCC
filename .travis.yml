@@ -6,4 +6,6 @@ cache:
     - $home/.m2
 after_success:
   - bash <(curl -s https://codecov.io/bash)
-CODECOV_TOKEN='5abf343f-7c0f-4ac4-8ec5-0cfac4b33413'
+env:
+  global:
+    CODECOV_TOKEN='5abf343f-7c0f-4ac4-8ec5-0cfac4b33413'
