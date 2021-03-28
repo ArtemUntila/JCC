@@ -1,5 +1,8 @@
 language: java
 jdk: oraclejdk11
+sudo: false
 cache:
   directories:
     - $home/.m2
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
