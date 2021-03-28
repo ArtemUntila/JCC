@@ -1,6 +1,5 @@
 language: java
 jdk: oraclejdk11
-sudo: false
 cache:
   directories:
     - $home/.m2
