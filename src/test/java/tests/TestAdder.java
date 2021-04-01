@@ -1,8 +1,10 @@
+package tests;
+
 import classes.Adder;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class Test1 {
+public class TestAdder {
 
     @Test
     public void class1Test() {
@@ -11,7 +13,7 @@ public class Test1 {
         int sum = adder.sum(a);
         Assert.assertEquals(10, sum);
         System.out.println("Expected sum = 10");
-        System.out.println("Actual sum = " + sum);
+        System.out.println("Adder.sum() = " + sum);
     }
 
 }
