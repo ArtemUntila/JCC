@@ -1,13 +1,18 @@
 package tests;
 
-import classes.Adder;
+import jcc.Adder;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class TestAdder {
+public class TestAdder implements Runnable {
+
+    @Override
+    public void run() {
+        adderTest();
+    }
 
     @Test
-    public void class1Test() {
+    public void adderTest() {
         int[] a = new int[] {1, 2, 3, 4};
         Adder adder = new Adder();
         int sum = adder.sum(a);
