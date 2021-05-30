@@ -1,6 +1,6 @@
 package jcc;
 
-public class Adder {
+public class AdderRunnable implements Runnable {
 
     public int sum(int[] a) {
         int sum = 0;
@@ -24,4 +24,12 @@ public class Adder {
         System.out.println("Did you cover me?");
     }
 
+
+    @Override
+    public void run() {
+        go();
+        went();
+        gone();
+        print();
+    }
 }

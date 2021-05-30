@@ -1,0 +1,64 @@
+package jcc;
+
+import javax.tools.JavaCompiler;
+import javax.tools.ToolProvider;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+
+
+public class CompilerTest {
+
+    public static void compile(String path) throws IOException {
+
+        List<String> lines = Files.readAllLines(Path.of(path));
+
+        String pack = path.replaceAll("([A-Za-z_0-9]+)\\.java", "");
+        System.out.println("pack = " + pack);
+
+        String name = path.replace(pack, "").replace(".java", "") + "Runnable";
+        String namePath = pack + name + ".java";
+        System.out.println("name = " + name);
+
+        BufferedWriter bW = Files.newBufferedWriter(Path.of(namePath));
+
+        ArrayList<String> methods = new ArrayList<>();
+        int lastIndex = lines.size() - 1;
+        for (int i = 0; i < lastIndex; i++) {
+            String line = lines.get(i);
+            if (line.contains("class")) {
+                line = line.replaceAll("class [A-Za-z0-9]+", "class " + name).
+                        replace("{", "implements Runnable {");
+            }
+            if (line.contains("public void")) {
+                methods.add(line.split("(\\s+public void\\s+)|(\\s)")[1]);
+            }
+            bW.write(line);
+            bW.newLine();
+        }
+
+        bW.write(addRunMethod(methods));
+        bW.newLine();
+        bW.write(lines.get(lastIndex));
+        bW.close();
+
+        JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+        compiler.run(null, null, null, namePath);
+    }
+
+    public static void main(String[] args) throws IOException {
+        compile("src\\main\\java\\jcc\\Adder.java");
+    }
+
+    public static String addRunMethod(List<String> methods) {
+        StringBuilder run = new StringBuilder("\n    @Override\n    public void run() {");
+        for (String method : methods) {
+            run.append("\n        ").append(method).append(";");
+        }
+        run.append("\n    }");
+        return run.toString();
+    }
+}
