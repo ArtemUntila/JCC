@@ -4,6 +4,8 @@ import javax.tools.JavaCompiler;
 import javax.tools.ToolProvider;
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -48,10 +50,14 @@ public class CompilerTest {
         compiler.run(null, null, null, namePath);  // компилируем в тот же пакет
     }
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws Exception {
         CompilerTest cT = new CompilerTest();
         cT.compileToRunnable("src/main/java/jcc/Adder.java");
         cT.compileToRunnable("src/main/java/tests/TestAdder.java");
+        ClassLoader cL = new URLClassLoader(new URL[]{new URL("file:src/main/java/tests/TestAdderRunnable.class")});
+        Class<?> klass = cL.loadClass("tests.TestAdderRunnable");
+        Runnable targetInstance = (Runnable) klass.getDeclaredConstructor().newInstance();
+        targetInstance.run();
     }
 
     private String addRunMethod(List<String> methods) { // добавление метода run()
