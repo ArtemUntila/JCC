@@ -25,7 +25,7 @@ public class CompilerTest {
 
         BufferedWriter bW = Files.newBufferedWriter(Path.of(namePath));
 
-        ArrayList<String> methods = new ArrayList<>(); // список с методами класса, которые нужно запустить в run()
+        List<String> methods = new ArrayList<>(); // список с методами класса, которые нужно запустить в run()
         int lastIndex = lines.size() - 1; // последняя строка - закрывающаяся фигурная скобка
         for (int i = 0; i < lastIndex; i++) {
             String line = lines.get(i);
