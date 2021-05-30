@@ -33,7 +33,7 @@ public class CompilerTest {
                 line = line.replaceAll("class [A-Za-z0-9_]+", "class " + name).
                         replace("{", "implements Runnable {");
             }
-            if (line.contains("public void")) { // добавляем метод, необходимый для запуска
+            if (line.contains("public void") && lines.get(i - 1).contains("@Test")) { // добавляем метод, необходимый для запуска
                 methods.add(line.split("(\\s+public void\\s+)|(\\s)")[1]);
             }
             bW.write(line);

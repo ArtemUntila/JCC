@@ -1,5 +1,7 @@
 package jcc;
 
+import org.junit.Test;
+
 public class Adder {
 
     public int sum(int[] a) {
@@ -20,6 +22,7 @@ public class Adder {
         System.out.println("gone");
     }
 
+    @Test
     public void print() {
         System.out.println("Did you cover me?");
     }
