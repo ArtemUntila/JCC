@@ -16,7 +16,7 @@ public class CompilerTest {
 
         List<String> lines = Files.readAllLines(Path.of(path));
 
-        String pack = path.replaceAll("([A-Za-z_0-9]+)\\.java", ""); // путь к пакету
+        String pack = path.replaceAll("([A-Za-z0-9_]+)\\.java", ""); // путь к пакету
         System.out.println("pack = " + pack);
 
         String name = path.replace(pack, "").replace(".java", "") + "Runnable"; // имя нового Runnable-класса
@@ -30,7 +30,7 @@ public class CompilerTest {
         for (int i = 0; i < lastIndex; i++) {
             String line = lines.get(i);
             if (line.contains("class")) { // меняем имя класса и ставим реализацию Runnable
-                line = line.replaceAll("class [A-Za-z0-9]+", "class " + name).
+                line = line.replaceAll("class [A-Za-z0-9_]+", "class " + name).
                         replace("{", "implements Runnable {");
             }
             if (line.contains("public void")) { // добавляем метод, необходимый для запуска
