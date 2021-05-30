@@ -12,7 +12,7 @@ import java.util.List;
 
 public class CompilerTest {
 
-    public static void compile(String path) throws IOException {
+    public void compile(String path) throws IOException {
 
         List<String> lines = Files.readAllLines(Path.of(path));
 
@@ -41,24 +41,25 @@ public class CompilerTest {
         }
 
         bW.write(addRunMethod(methods)); // добавление метода run()
-        bW.newLine();
         bW.write(lines.get(lastIndex));
         bW.close();
 
-        JavaCompiler compiler = ToolProvider.getSystemJavaCompiler(); // компилируем в тот же пакет
-        compiler.run(null, null, null, namePath);
+        JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+        compiler.run(null, null, null, namePath);  // компилируем в тот же пакет
     }
 
     public static void main(String[] args) throws IOException {
-        compile("src\\main\\java\\jcc\\Adder.java");
+        CompilerTest cT = new CompilerTest();
+        cT.compile("src/main/java/jcc/Adder.java");
+        cT.compile("src/main/java/tests/TestAdder.java");
     }
 
-    public static String addRunMethod(List<String> methods) { // добавление метода run()
+    private String addRunMethod(List<String> methods) { // добавление метода run()
         StringBuilder run = new StringBuilder("\n    @Override\n    public void run() {");
         for (String method : methods) {
             run.append("\n        ").append(method).append(";");
         }
-        run.append("\n    }");
+        run.append("\n    }\n");
         return run.toString();
     }
 }

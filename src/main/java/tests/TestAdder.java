@@ -4,15 +4,10 @@ import jcc.Adder;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class TestAdder implements Runnable {
-
-    @Override
-    public void run() {
-        adderTest();
-    }
+public class TestAdder {
 
     @Test
-    public void adderTest() {
+    public void sumTest() {
         int[] a = new int[] {1, 2, 3, 4};
         Adder adder = new Adder();
         int sum = adder.sum(a);
