@@ -12,7 +12,7 @@ import java.util.List;
 
 public class CompilerTest {
 
-    public void compile(String path) throws IOException {
+    public void compileToRunnable(String path) throws IOException {
 
         List<String> lines = Files.readAllLines(Path.of(path));
 
@@ -50,8 +50,8 @@ public class CompilerTest {
 
     public static void main(String[] args) throws IOException {
         CompilerTest cT = new CompilerTest();
-        cT.compile("src/main/java/jcc/Adder.java");
-        cT.compile("src/main/java/tests/TestAdder.java");
+        cT.compileToRunnable("src/main/java/jcc/Adder.java");
+        cT.compileToRunnable("src/main/java/tests/TestAdder.java");
     }
 
     private String addRunMethod(List<String> methods) { // добавление метода run()
