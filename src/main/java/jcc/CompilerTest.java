@@ -5,10 +5,11 @@ import javax.tools.ToolProvider;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 
 public class CompilerTest {
@@ -60,6 +61,7 @@ public class CompilerTest {
 
     public static void main(String[] args) throws Exception {
         CompilerTest cT = new CompilerTest();
+
         File dir = new File("tests/jcc");
         if (dir.isDirectory()) {
             File[] files = dir.listFiles();
@@ -67,16 +69,16 @@ public class CompilerTest {
                 cT.compileToRunnable(file.getAbsolutePath());
             }
         }
-        /*cT.compileToRunnable("src/main/java/tests/TestAdder.java");
-        cT.compileToRunnable("src/main/java/tests/Adder.java");
-        File file = new File("src/main/java/tests/TestAdderRunnable.class");
-        System.out.println(file.exists());
-        ClassLoader cL = new URLClassLoader(new URL[]{new URL("file:src/main/java/tests")});
-        Class<?> klass = cL.loadClass("tests.TestAdderRunnable");
-        InputStream original = cL.getResourceAsStream("tests/TestAdderRunnable.class");
-        System.out.println(Arrays.toString(original.readAllBytes()));
+
+        File tests = new File("src/main/java/tests");
+        if (tests.isDirectory()) {
+            Arrays.stream(tests.listFiles()).forEach(f -> System.out.println(f.getAbsolutePath()));
+        }
+
+        ClassLoader cL = new URLClassLoader(new URL[]{new URL("file:" + tests.getAbsolutePath())});
+        Class<?> klass = cL.loadClass("tests.Adder_print_306551973_Runnable");
         Runnable targetInstance = (Runnable) klass.getDeclaredConstructor().newInstance();
-        targetInstance.run();*/
+        targetInstance.run();
     }
 
     private String addRunMethod(List<String> methods) { // добавление метода run()
