@@ -7,7 +7,7 @@ import org.junit.Test;
 public class TestAdder {
 
     @Test
-    public void sumTest() {
+    public static void sumTest() {
         int[] a = new int[] {1, 2, 3, 4};
         Adder adder = new Adder();
         int sum = adder.sum(a);
@@ -17,3 +17,6 @@ public class TestAdder {
     }
 
 }
+
+
+

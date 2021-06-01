@@ -1,14 +1,16 @@
 package jcc;
 
 import javax.tools.JavaCompiler;
+import javax.tools.JavaFileObject;
 import javax.tools.ToolProvider;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 
 
@@ -45,7 +47,7 @@ public class CompilerTest {
             }
             if (line.contains("{"))
                 braceCounter++;
-            else if(line.contains("}"))
+            if(line.contains("}"))
                 braceCounter--;
             if (braceCounter == 0 && insideClass) break;
             bW.write(line);
@@ -57,28 +59,31 @@ public class CompilerTest {
 
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
         compiler.run(null, null, null, namePath);  // компилируем в тот же пакет
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     public static void main(String[] args) throws Exception {
-        CompilerTest cT = new CompilerTest();
+        File file = new File("tests/jcc/Adder_init_235991254.java");
+        List<String> program = Files.readAllLines(file.toPath());
+        StringBuilder sb = new StringBuilder();
+        for (String line : program) {
+            sb.append(line).append('\n');
+        }
+        System.out.println(sb);
+    }
 
-        File dir = new File("tests/jcc");
-        if (dir.isDirectory()) {
-            File[] files = dir.listFiles();
-            for (File file : files) {
-                cT.compileToRunnable(file.getAbsolutePath());
+    public void invokeStaticTests(Class<?> klass) throws InvocationTargetException, IllegalAccessException {
+        Method[] methods = klass.getMethods();
+        for (Method method : methods) {
+            if (method.getAnnotation(org.junit.Test.class) != null) {
+                System.out.println(method.getName());
+                method.invoke(null);
             }
         }
-
-        File tests = new File("src/main/java/tests");
-        if (tests.isDirectory()) {
-            Arrays.stream(tests.listFiles()).forEach(f -> System.out.println(f.getAbsolutePath()));
-        }
-
-        ClassLoader cL = new URLClassLoader(new URL[]{new URL("file:" + tests.getAbsolutePath())});
-        Class<?> klass = cL.loadClass("tests.Adder_print_306551973_Runnable");
-        Runnable targetInstance = (Runnable) klass.getDeclaredConstructor().newInstance();
-        targetInstance.run();
     }
 
     private String addRunMethod(List<String> methods) { // добавление метода run()
