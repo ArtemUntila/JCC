@@ -87,7 +87,7 @@ public class Snatch {
         }
 
         @Override
-        public CharSequence getCharContent(boolean ignoreEncodingErrors) throws IOException {
+        public CharSequence getCharContent(boolean ignoreEncodingErrors) {
             return code;
         }
     }
@@ -155,7 +155,7 @@ public class Snatch {
             return super.loadClass(name);
         }
 
-        public byte[] getBytes(String name) {
+        private byte[] getBytes(String name) {
             for (ClassJavaFileObject file : files) {
                 if (file.getClassName().equals(name)) {
                     return file.getBytes();

@@ -107,16 +107,6 @@ public class CoverageReporter {
         return name.substring(0, name.length() - 6).replace('/', '.');
     }
 
-    /*public void invokeStaticTests(Class<?> klass) throws InvocationTargetException, IllegalAccessException {
-        Method[] methods = klass.getMethods();
-        for (Method method : methods) {
-            if (method.getAnnotation(org.junit.Test.class) != null) {
-                System.out.println(method.getName());
-                method.invoke(null);
-            }
-        }
-    }*/
-
     public void invokeStaticTests(Class<?> klass) throws InvocationTargetException, IllegalAccessException {
         System.out.println("\nInvoking " + klass.getName() + " static tests...");
         Method[] methods = klass.getMethods();
