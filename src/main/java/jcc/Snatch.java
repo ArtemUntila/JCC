@@ -17,17 +17,6 @@ import java.util.*;
 
 public class Snatch {
 
-    public static CompiledClassLoader compiledClassLoader;
-
-    /*public void execute(File file) throws Exception {
-
-        CompiledClassLoader classLoader =
-                new CompiledClassLoader();
-
-        Class<?> klass = classLoader.loadClass(name);
-        invokeStaticTests(klass);
-    }*/
-
     private List<ClassJavaFileObject> getGeneratedClasses(File file) throws Exception {
 
         String program = getProgramText(file);
@@ -107,7 +96,7 @@ public class Snatch {
         }
 
         @Override
-        public OutputStream openOutputStream() throws IOException {
+        public OutputStream openOutputStream() {
             return outputStream;
         }
 
