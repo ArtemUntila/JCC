@@ -38,29 +38,33 @@ public class Snatch {
         return fileManager.getGeneratedOutputFiles();
     }
 
-    static List<ClassJavaFileObject> list = new ArrayList<>();
+    private final List<ClassJavaFileObject> generatedClassesList = new ArrayList<>();
 
     public void generateAll(File directory) throws Exception {
         if (!directory.isDirectory()) throw new IllegalArgumentException();
         File[] files = directory.listFiles();
         for (File file : files) {
             if (!file.isDirectory()) {
-                list.addAll(getGeneratedClasses(file));
+                this.generatedClassesList.addAll(getGeneratedClasses(file));
             } else {
                 generateAll(file);
             }
         }
     }
 
+    public List<ClassJavaFileObject> getGeneratedClassesList() {
+        return generatedClassesList;
+    }
+
     public CompiledClassLoader getCompiledClassLoader() {
-        return new CompiledClassLoader(list);
+        return new CompiledClassLoader(this.generatedClassesList);
     }
 
     public static void main(String[] args) throws Exception {
         File file = new File("tests"); //Adder_init_235991254.java
         Snatch snatch = new Snatch();
         snatch.generateAll(file);
-        List<ClassJavaFileObject> list = snatch.list;
+        List<ClassJavaFileObject> list = snatch.getGeneratedClassesList();
         list.forEach(f -> System.out.println(f.getClassName()));
         CompiledClassLoader classLoader = snatch.getCompiledClassLoader();
         for (ClassJavaFileObject f : list) {
