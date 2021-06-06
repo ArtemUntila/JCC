@@ -17,10 +17,6 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.*;
 
-/**
- * Принимаемый проект скомпилирован,а также содержит классы тестов в каких-либо .jar-файлах
- * Тесты принимаемого проекта реализуют интерфейс Runnable.
- */
 
 public class CoverageReporter {
 
@@ -33,16 +29,15 @@ public class CoverageReporter {
     private final List<String> tests;
 
 
-    public CoverageReporter() throws IOException {
+    public CoverageReporter(String classesPath, String testsPath) throws IOException {
 
         Snatch snatch = new Snatch();
-        snatch.generateAll(new File("tests"));
+        snatch.generateAll(new File(testsPath));
+
+        this.baseClassLoader = new URLClassLoader(new URL[]{ new URL("file:" + classesPath) });
         this.testsClassLoader = snatch.getCompiledClassLoader();
-
-        this.tests = snatch.getTestsNames();
-        this.baseClassLoader = new URLClassLoader(new URL[]{ new URL("file:src/main/java/jcc") });
         this.instrAndTestsClassLoader = new MemoryClassLoader();
-
+        this.tests = snatch.getTestsNames();
     }
 
     public void execute() throws Exception {
@@ -65,7 +60,7 @@ public class CoverageReporter {
         final RuntimeData data = new RuntimeData();
         runtime.startup(data);
 
-        System.out.println("\nRunning tests...");
+        System.out.println("\nRunning tests...\n");
 
         for (String testName : tests) {
             original = testsClassLoader.getResourceAsStream(testName);
@@ -74,7 +69,7 @@ public class CoverageReporter {
             invokeStaticTests(testClass);
         }
 
-        System.out.println("\nAnalyzing Coverage...");
+        System.out.println("\nAnalyzing Coverage...\n");
 
         final ExecutionDataStore executionData = new ExecutionDataStore();
         final SessionInfoStore sessionInfos = new SessionInfoStore();
@@ -92,7 +87,7 @@ public class CoverageReporter {
 
         for (final IClassCoverage cc : coverageBuilder.getClasses()) {
             String className = cc.getName();
-            System.out.printf("%nCoverage of class %s:%n", className);
+            System.out.printf("Coverage of class %s:%n", className);
 
             printCounter("instructions", cc.getInstructionCounter());
             printCounter("branches", cc.getBranchCounter());
@@ -107,8 +102,14 @@ public class CoverageReporter {
         return name.substring(0, name.length() - 6).replace('/', '.');
     }
 
+    private void printCounter(final String unit, final ICounter counter) {
+        final Integer covered = counter.getCoveredCount();
+        final Integer total = counter.getTotalCount();
+        System.out.printf("%s of %s %s covered%n", covered, total, unit);
+    }
+
     public void invokeStaticTests(Class<?> klass) throws InvocationTargetException, IllegalAccessException {
-        System.out.println("\nInvoking " + klass.getName() + " static tests...");
+        System.out.println("Invoking " + klass.getName() + " static tests...");
         Method[] methods = klass.getMethods();
         for (Method method : methods) {
             if (method.getAnnotation(org.junit.Test.class) != null) {
@@ -119,14 +120,8 @@ public class CoverageReporter {
         }
     }
 
-    private void printCounter(final String unit, final ICounter counter) {
-        final Integer covered = counter.getCoveredCount();
-        final Integer total = counter.getTotalCount();
-        System.out.printf("%s of %s %s covered%n", covered, total, unit);
-    }
-
     public static void main(String[] args) throws Exception {
-        new CoverageReporter().execute();
+        new CoverageReporter("src/main/java/jcc", "tests").execute();
     }
 
     public static class MemoryClassLoader extends ClassLoader {
@@ -145,6 +140,6 @@ public class CoverageReporter {
             }
             return super.loadClass(name);
         }
-
     }
+
 }

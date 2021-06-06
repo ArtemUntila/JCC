@@ -55,12 +55,12 @@ public class Snatch {
 
     public List<String> getTestsNames() {
         List<String> result = new ArrayList<>();
-        this.getGeneratedClassesList().forEach(s -> result.add(s.getClassName()));
+        getGeneratedClassesList().forEach(s -> result.add(s.getClassName()));
         return result;
     }
 
     public CompiledClassLoader getCompiledClassLoader() {
-        return new CompiledClassLoader(this.getGeneratedClassesList());
+        return new CompiledClassLoader(getGeneratedClassesList());
     }
 
     public static void main(String[] args) throws Exception {
@@ -72,12 +72,38 @@ public class Snatch {
         CompiledClassLoader classLoader = snatch.getCompiledClassLoader();
         for (String name : list) {
             Class<?> klass = classLoader.loadClass(name);
-            System.out.println(name);
             snatch.invokeStaticTests(klass);
         }
     }
 
+    public String getJavaFileName(File javaFile) {
+        return javaFile.getName().replace(".java", "");
+    }
+
+    public String getProgramText(File program) throws IOException {
+        List<String> lines = Files.readAllLines(program.toPath());
+        StringBuilder sb = new StringBuilder();
+        for (String line : lines) {
+            if (line.contains("package")) continue;
+            sb.append(line).append('\n');
+        }
+        return sb.toString();
+    }
+
+    public void invokeStaticTests(Class<?> klass) throws InvocationTargetException, IllegalAccessException {
+        System.out.println("\nInvoking " + klass.getName() + " static tests...");
+        Method[] methods = klass.getMethods();
+        for (Method method : methods) {
+            if (method.getAnnotation(org.junit.Test.class) != null) {
+                System.out.print(method.getName() + ": ");
+                method.invoke(null);
+                System.out.println();
+            }
+        }
+    }
+
     public static class StringJavaFileObject extends SimpleJavaFileObject {
+
         private final String code;
 
         public StringJavaFileObject(String name, String code) {
@@ -93,7 +119,9 @@ public class Snatch {
     }
 
     private static class ClassJavaFileObject extends SimpleJavaFileObject {
+
         private final ByteArrayOutputStream outputStream;
+
         private final String className;
 
         protected ClassJavaFileObject(String className, Kind kind) {
@@ -117,6 +145,7 @@ public class Snatch {
     }
 
     private static class SimpleJavaFileManager extends ForwardingJavaFileManager {
+
         private final List<ClassJavaFileObject> outputFiles;
 
         protected SimpleJavaFileManager(JavaFileManager fileManager) {
@@ -139,6 +168,7 @@ public class Snatch {
     }
 
     private static class CompiledClassLoader extends ClassLoader {
+
         private final List<ClassJavaFileObject> files;
 
         private CompiledClassLoader(List<ClassJavaFileObject> files) {
@@ -151,7 +181,6 @@ public class Snatch {
             if (bytes != null) {
                 return super.defineClass(name, bytes, 0, bytes.length);
             }
-            System.out.println(name + " - NULL ");
             return super.loadClass(name);
         }
 
@@ -167,33 +196,6 @@ public class Snatch {
         @Override
         public InputStream getResourceAsStream(String name) {
             return new ByteArrayInputStream(getBytes(name));
-        }
-
-    }
-
-    public String getProgramText(File program) throws IOException {
-        List<String> lines = Files.readAllLines(program.toPath());
-        StringBuilder sb = new StringBuilder();
-        for (String line : lines) {
-            if (line.contains("package")) continue;
-            sb.append(line).append('\n');
-        }
-        return sb.toString();
-    }
-
-    public String getJavaFileName(File javaFile) {
-        return javaFile.getName().replace(".java", "");
-    }
-
-    public void invokeStaticTests(Class<?> klass) throws InvocationTargetException, IllegalAccessException {
-        System.out.println("\nInvoking " + klass.getName() + " static tests...");
-        Method[] methods = klass.getMethods();
-        for (Method method : methods) {
-            if (method.getAnnotation(org.junit.Test.class) != null) {
-                System.out.print(method.getName() + ": ");
-                method.invoke(null);
-                System.out.println();
-            }
         }
     }
 
