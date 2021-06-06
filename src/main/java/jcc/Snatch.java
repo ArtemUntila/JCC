@@ -17,11 +17,21 @@ import java.util.*;
 
 public class Snatch {
 
-    public void execute(File file) throws Exception {
+    public static CompiledClassLoader compiledClassLoader;
 
-        String[] data = getProgramText(file);
-        String program = data[1];
-        String name = data[0];
+    /*public void execute(File file) throws Exception {
+
+        CompiledClassLoader classLoader =
+                new CompiledClassLoader();
+
+        Class<?> klass = classLoader.loadClass(name);
+        invokeStaticTests(klass);
+    }*/
+
+    private List<ClassJavaFileObject> getGeneratedClasses(File file) throws Exception {
+
+        String program = getProgramText(file);
+        String name = getJavaFileName(file);
 
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
 
@@ -32,27 +42,43 @@ public class Snatch {
                 new SimpleJavaFileManager(compiler.getStandardFileManager(null, null, null));
 
         JavaCompiler.CompilationTask compilationTask = compiler.getTask(
-                null, fileManager, null, null, null, Arrays.asList(compilationUnit));
+                null, fileManager, null, null, null, Collections.singletonList(compilationUnit));
 
         compilationTask.call();
 
-        CompiledClassLoader classLoader =
-                new CompiledClassLoader(fileManager.getGeneratedOutputFiles());
-
-        Class<?> klass = classLoader.loadClass(name);
-        invokeStaticTests(klass);
+        return fileManager.getGeneratedOutputFiles();
     }
 
-    public void executeAll(File directory) throws Exception {
+    static List<ClassJavaFileObject> list = new ArrayList<>();
+
+    public void generateAll(File directory) throws Exception {
         if (!directory.isDirectory()) throw new IllegalArgumentException();
         File[] files = directory.listFiles();
         for (File file : files) {
-            execute(file);
+            if (!file.isDirectory()) {
+                list.addAll(getGeneratedClasses(file));
+            } else {
+                generateAll(file);
+            }
         }
     }
 
+    public CompiledClassLoader getCompiledClassLoader() {
+        return new CompiledClassLoader(list);
+    }
+
     public static void main(String[] args) throws Exception {
-        new Snatch().executeAll(new File("tests/jcc"));
+        File file = new File("tests"); //Adder_init_235991254.java
+        Snatch snatch = new Snatch();
+        snatch.generateAll(file);
+        List<ClassJavaFileObject> list = snatch.list;
+        list.forEach(f -> System.out.println(f.getClassName()));
+        CompiledClassLoader classLoader = snatch.getCompiledClassLoader();
+        for (ClassJavaFileObject f : list) {
+            Class<?> klass = classLoader.loadClass(f.getClassName());
+            System.out.println(f.getName());
+            snatch.invokeStaticTests(klass);
+        }
     }
 
     public static class StringJavaFileObject extends SimpleJavaFileObject {
@@ -124,28 +150,29 @@ public class Snatch {
         }
 
         @Override
-        protected Class<?> findClass(String name) throws ClassNotFoundException {
-            Iterator<ClassJavaFileObject> itr = files.iterator();
-            while (itr.hasNext()) {
-                ClassJavaFileObject file = itr.next();
+        public Class<?> loadClass(String name) throws ClassNotFoundException {
+            for (ClassJavaFileObject file : files) {
                 if (file.getClassName().equals(name)) {
-                    itr.remove();
                     byte[] bytes = file.getBytes();
                     return super.defineClass(name, bytes, 0, bytes.length);
                 }
             }
-            return super.findClass(name);
+            return super.loadClass(name);
         }
     }
 
-    public String[] getProgramText(File program) throws IOException {
+    public String getProgramText(File program) throws IOException {
         List<String> lines = Files.readAllLines(program.toPath());
         StringBuilder sb = new StringBuilder();
         for (String line : lines) {
             if (line.contains("package")) continue;
             sb.append(line).append('\n');
         }
-        return new String[]{program.getName().replaceAll("\\.java", ""), sb.toString()};
+        return sb.toString();
+    }
+
+    public String getJavaFileName(File javaFile) {
+        return javaFile.getName().replace(".java", "");
     }
 
     public void invokeStaticTests(Class<?> klass) throws InvocationTargetException, IllegalAccessException {
