@@ -1,10 +1,7 @@
 package jcc;
 
 import javax.tools.*;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URI;
@@ -17,7 +14,7 @@ import java.util.*;
 
 public class Snatch {
 
-    private List<ClassJavaFileObject> getGeneratedClasses(File file) throws Exception {
+    private List<ClassJavaFileObject> getGeneratedClasses(File file) throws IOException {
 
         String program = getProgramText(file);
         String name = getJavaFileName(file);
@@ -40,7 +37,7 @@ public class Snatch {
 
     private final List<ClassJavaFileObject> generatedClassesList = new ArrayList<>();
 
-    public void generateAll(File directory) throws Exception {
+    public void generateAll(File directory) throws IOException {
         if (!directory.isDirectory()) throw new IllegalArgumentException();
         File[] files = directory.listFiles();
         for (File file : files) {
@@ -56,20 +53,26 @@ public class Snatch {
         return generatedClassesList;
     }
 
+    public List<String> getTestsNames() {
+        List<String> result = new ArrayList<>();
+        this.getGeneratedClassesList().forEach(s -> result.add(s.getClassName()));
+        return result;
+    }
+
     public CompiledClassLoader getCompiledClassLoader() {
-        return new CompiledClassLoader(this.generatedClassesList);
+        return new CompiledClassLoader(this.getGeneratedClassesList());
     }
 
     public static void main(String[] args) throws Exception {
         File file = new File("tests"); //Adder_init_235991254.java
         Snatch snatch = new Snatch();
         snatch.generateAll(file);
-        List<ClassJavaFileObject> list = snatch.getGeneratedClassesList();
-        list.forEach(f -> System.out.println(f.getClassName()));
+        List<String> list = snatch.getTestsNames();
+        list.forEach(System.out::println);
         CompiledClassLoader classLoader = snatch.getCompiledClassLoader();
-        for (ClassJavaFileObject f : list) {
-            Class<?> klass = classLoader.loadClass(f.getClassName());
-            System.out.println(f.getName());
+        for (String name : list) {
+            Class<?> klass = classLoader.loadClass(name);
+            System.out.println(name);
             snatch.invokeStaticTests(klass);
         }
     }
@@ -118,13 +121,13 @@ public class Snatch {
 
         protected SimpleJavaFileManager(JavaFileManager fileManager) {
             super(fileManager);
-            outputFiles = new ArrayList<ClassJavaFileObject>();
+            outputFiles = new ArrayList<>();
         }
 
         @Override
         public JavaFileObject getJavaFileForOutput(
                 Location location, String className, JavaFileObject.Kind kind, FileObject sibling
-        ) throws IOException {
+        ) {
             ClassJavaFileObject file = new ClassJavaFileObject(className, kind);
             outputFiles.add(file);
             return file;
@@ -144,14 +147,28 @@ public class Snatch {
 
         @Override
         public Class<?> loadClass(String name) throws ClassNotFoundException {
-            for (ClassJavaFileObject file : files) {
-                if (file.getClassName().equals(name)) {
-                    byte[] bytes = file.getBytes();
-                    return super.defineClass(name, bytes, 0, bytes.length);
-                }
+            byte[] bytes = getBytes(name);
+            if (bytes != null) {
+                return super.defineClass(name, bytes, 0, bytes.length);
             }
+            System.out.println(name + " - NULL ");
             return super.loadClass(name);
         }
+
+        public byte[] getBytes(String name) {
+            for (ClassJavaFileObject file : files) {
+                if (file.getClassName().equals(name)) {
+                    return file.getBytes();
+                }
+            }
+            return null;
+        }
+
+        @Override
+        public InputStream getResourceAsStream(String name) {
+            return new ByteArrayInputStream(getBytes(name));
+        }
+
     }
 
     public String getProgramText(File program) throws IOException {
