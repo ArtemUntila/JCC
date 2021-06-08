@@ -4,7 +4,10 @@ import org.junit.runner.JUnitCore;
 
 import javax.tools.*;
 import java.io.*;
+import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.util.*;
 
@@ -13,6 +16,13 @@ import java.util.*;
  */
 
 public class Snatch {
+
+    private final URLClassLoader baseClassLoader;
+
+    public Snatch(String absoluteJarPath) throws MalformedURLException {
+        this.baseClassLoader = new URLClassLoader(new URL[]{ new URL("file:" + absoluteJarPath) });
+        System.setProperty("java.class.path", System.getProperty("java.class.path") + ';' + absoluteJarPath);
+    }
 
     private List<ClassJavaFileObject> getGeneratedClasses(File javaFile) throws IOException {
 
@@ -68,7 +78,7 @@ public class Snatch {
 
     public static void main(String[] args) throws Exception {
         File file = new File("tests"); //Adder_init_235991254.java
-        Snatch snatch = new Snatch();
+        Snatch snatch = new Snatch("D:/UltimateIDEA/JCC/jcc-test.jar");
         snatch.generateAll(file);
         List<String> list = snatch.getTestsNames();
         list.forEach(System.out::println);
@@ -158,7 +168,7 @@ public class Snatch {
         }
     }
 
-    private static class CompiledClassLoader extends ClassLoader {
+    private class CompiledClassLoader extends ClassLoader {
 
         private final List<ClassJavaFileObject> files;
 
@@ -170,9 +180,9 @@ public class Snatch {
         public Class<?> loadClass(String name) throws ClassNotFoundException {
             byte[] bytes = getBytes(name);
             if (bytes != null) {
-                return super.defineClass(name, bytes, 0, bytes.length);
+                return defineClass(name, bytes, 0, bytes.length);
             }
-            return super.loadClass(name);
+            return baseClassLoader.loadClass(name);
         }
 
         private byte[] getBytes(String name) {

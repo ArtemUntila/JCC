@@ -27,10 +27,9 @@ public class CoverageReporter {
 
     private final List<String> tests;
 
-
     public CoverageReporter(String classesPath, String testsPath) throws IOException {
 
-        Snatch snatch = new Snatch();
+        Snatch snatch = new Snatch(classesPath);
         snatch.generateAll(new File(testsPath));
 
         this.baseClassLoader = new URLClassLoader(new URL[]{ new URL("file:" + classesPath) });
@@ -120,7 +119,7 @@ public class CoverageReporter {
     }
 
     public static void main(String[] args) throws Exception {
-        new CoverageReporter("src/main/java/jcc", "tests").execute();
+        new CoverageReporter("D:/UltimateIDEA/JCC/jcc-test.jar", "tests").execute();
     }
 
     public static class MemoryClassLoader extends ClassLoader {
