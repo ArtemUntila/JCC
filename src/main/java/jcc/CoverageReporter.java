@@ -9,19 +9,16 @@ import org.jacoco.core.runtime.LoggerRuntime;
 import org.jacoco.core.runtime.RuntimeData;
 import org.junit.runner.JUnitCore;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.util.*;
+
+import jcc.Snatch.CompiledClassLoader;
 
 
 public class CoverageReporter {
 
-    private final URLClassLoader baseClassLoader;
-
-    private final ClassLoader testsClassLoader;
+    private final CompiledClassLoader compiledClassLoader;
 
     private final MemoryClassLoader instrAndTestsClassLoader;
 
@@ -30,10 +27,9 @@ public class CoverageReporter {
     public CoverageReporter(String classesPath, String testsPath) throws IOException {
 
         Snatch snatch = new Snatch(classesPath);
-        snatch.generateAll(new File(testsPath));
+        snatch.generateAll(testsPath);
 
-        this.baseClassLoader = new URLClassLoader(new URL[]{ new URL("file:" + classesPath) });
-        this.testsClassLoader = snatch.getCompiledClassLoader();
+        this.compiledClassLoader = snatch.getCompiledClassLoader();
         this.instrAndTestsClassLoader = new MemoryClassLoader();
         this.tests = snatch.getTestsNames();
     }
@@ -46,13 +42,13 @@ public class CoverageReporter {
 
         List<String> classes = new ArrayList<>();
 
-        String fullyQualifiedName1 = "jcc.Adder";
-        System.out.println("jcc/Adder.class" + " - " + fullyQualifiedName1);
-        original = baseClassLoader.getResourceAsStream("jcc/Adder.class");
+        String fullyQualifiedName = "jcc.Adder";
+        System.out.println("jcc/Adder.class" + " - " + fullyQualifiedName);
+        original = compiledClassLoader.getResourceAsStream("jcc/Adder.class");
         final Instrumenter instr = new Instrumenter(runtime);
-        final byte[] instrumented = instr.instrument(original, fullyQualifiedName1);
+        final byte[] instrumented = instr.instrument(original, fullyQualifiedName);
         original.close();
-        instrAndTestsClassLoader.addDefinition(fullyQualifiedName1, instrumented);
+        instrAndTestsClassLoader.addDefinition(fullyQualifiedName, instrumented);
         classes.add("jcc/Adder.class");
 
         final RuntimeData data = new RuntimeData();
@@ -61,8 +57,7 @@ public class CoverageReporter {
         System.out.println("\nRunning tests...\n");
 
         for (String testName : tests) {
-            original = testsClassLoader.getResourceAsStream(testName);
-            instrAndTestsClassLoader.addDefinition(testName, original.readAllBytes());
+            instrAndTestsClassLoader.addDefinition(testName, compiledClassLoader.getBytes(testName));
             final Class<?> testClass = instrAndTestsClassLoader.loadClass(testName);
             JUnitCore.runClasses(testClass);
         }
@@ -78,7 +73,7 @@ public class CoverageReporter {
         final Analyzer analyzer = new Analyzer(executionData, coverageBuilder);
 
         for (String className : classes) {
-            original = baseClassLoader.getResourceAsStream(className);
+            original = compiledClassLoader.getResourceAsStream(className);
             analyzer.analyzeClass(original, getFullyQualifiedName(className));
             original.close();
         }
@@ -122,7 +117,7 @@ public class CoverageReporter {
         new CoverageReporter("D:/UltimateIDEA/JCC/jcc-test.jar", "tests").execute();
     }
 
-    public static class MemoryClassLoader extends ClassLoader {
+    public class MemoryClassLoader extends ClassLoader {
 
         private final Map<String, byte[]> definitions = new HashMap<>();
 
@@ -136,7 +131,7 @@ public class CoverageReporter {
             if (bytes != null) {
                 return defineClass(name, bytes, 0, bytes.length);
             }
-            return super.loadClass(name);
+            return compiledClassLoader.loadClass(name);
         }
     }
 

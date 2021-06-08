@@ -50,14 +50,15 @@ public class Snatch {
 
     private final List<ClassJavaFileObject> generatedClassesList = new ArrayList<>();
 
-    public void generateAll(File directory) throws IOException {
+    public void generateAll(String directoryPath) throws IOException {
+        File directory = new File(directoryPath);
         if (!directory.isDirectory()) throw new IllegalArgumentException();
         File[] files = directory.listFiles();
         for (File file : files) {
             if (!file.isDirectory()) {
                 this.generatedClassesList.addAll(getGeneratedClasses(file));
             } else {
-                generateAll(file);
+                generateAll(file.getAbsolutePath());
             }
         }
     }
@@ -77,21 +78,15 @@ public class Snatch {
     }
 
     public static void main(String[] args) throws Exception {
-        File file = new File("tests"); //Adder_init_235991254.java
         Snatch snatch = new Snatch("D:/UltimateIDEA/JCC/jcc-test.jar");
-        snatch.generateAll(file);
+        snatch.generateAll("tests");
         List<String> list = snatch.getTestsNames();
         list.forEach(System.out::println);
         CompiledClassLoader classLoader = snatch.getCompiledClassLoader();
-        Class<?>[] classes = new Class[list.size()];
-        /*for (String name : list) {
+        for (String name : list) {
             Class<?> klass = classLoader.loadClass(name);
-            JUnitCore.runClasses(classes);
-        }*/
-        for (int i = 0; i < list.size(); i++) {
-            classes[i] = classLoader.loadClass(list.get(i));
+            JUnitCore.runClasses(klass);
         }
-        JUnitCore.runClasses(classes);
     }
 
     public String getProgramText(File program) throws IOException {
@@ -168,7 +163,7 @@ public class Snatch {
         }
     }
 
-    private class CompiledClassLoader extends ClassLoader {
+    public class CompiledClassLoader extends ClassLoader {
 
         private final List<ClassJavaFileObject> files;
 
@@ -185,7 +180,7 @@ public class Snatch {
             return baseClassLoader.loadClass(name);
         }
 
-        private byte[] getBytes(String name) {
+        public byte[] getBytes(String name) {
             for (ClassJavaFileObject file : files) {
                 if (file.getClassName().equals(name)) {
                     return file.getBytes();
@@ -196,7 +191,7 @@ public class Snatch {
 
         @Override
         public InputStream getResourceAsStream(String name) {
-            return new ByteArrayInputStream(getBytes(name));
+            return baseClassLoader.getResourceAsStream(name);
         }
     }
 
