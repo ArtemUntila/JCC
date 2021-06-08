@@ -114,7 +114,7 @@ public class CoverageReporter {
     }
 
     public static void main(String[] args) throws Exception {
-        new CoverageReporter("D:/UltimateIDEA/JCC/jcc-test.jar", "tests").execute();
+        new CoverageReporter("jcc-test.jar", "tests").execute();
     }
 
     public class MemoryClassLoader extends ClassLoader {

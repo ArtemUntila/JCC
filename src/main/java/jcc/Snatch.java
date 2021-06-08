@@ -78,7 +78,7 @@ public class Snatch {
     }
 
     public static void main(String[] args) throws Exception {
-        Snatch snatch = new Snatch("D:/UltimateIDEA/JCC/jcc-test.jar");
+        Snatch snatch = new Snatch("jcc-test.jar");
         snatch.generateAll("tests");
         List<String> list = snatch.getTestsNames();
         list.forEach(System.out::println);
