@@ -23,7 +23,7 @@ public class Adder {
     }
 
     @Test
-    public static void print() {
+    public void print() {
         System.out.println("Did you cover me?");
     }
 

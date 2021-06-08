@@ -7,12 +7,11 @@ import org.jacoco.core.instr.Instrumenter;
 import org.jacoco.core.runtime.IRuntime;
 import org.jacoco.core.runtime.LoggerRuntime;
 import org.jacoco.core.runtime.RuntimeData;
+import org.junit.runner.JUnitCore;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.*;
@@ -66,7 +65,7 @@ public class CoverageReporter {
             original = testsClassLoader.getResourceAsStream(testName);
             instrAndTestsClassLoader.addDefinition(testName, original.readAllBytes());
             final Class<?> testClass = instrAndTestsClassLoader.loadClass(testName);
-            invokeStaticTests(testClass);
+            JUnitCore.runClasses(testClass);
         }
 
         System.out.println("\nAnalyzing Coverage...\n");
@@ -94,6 +93,18 @@ public class CoverageReporter {
             printCounter("lines", cc.getLineCounter());
             printCounter("methods", cc.getMethodCounter());
             printCounter("complexity", cc.getComplexityCounter());
+
+            System.out.printf("%nCoverage of %s methods:%n", className);
+
+            for (final IMethodCoverage mc : cc.getMethods()) {
+                System.out.printf("%nCoverage of method %s:%n", mc.getName());
+
+                printCounter("instructions", mc.getInstructionCounter());
+                printCounter("branches", mc.getBranchCounter());
+                printCounter("lines", mc.getLineCounter());
+                printCounter("methods", mc.getMethodCounter());
+                printCounter("complexity", mc.getComplexityCounter());
+            }
         }
 
     }
@@ -106,18 +117,6 @@ public class CoverageReporter {
         final Integer covered = counter.getCoveredCount();
         final Integer total = counter.getTotalCount();
         System.out.printf("%s of %s %s covered%n", covered, total, unit);
-    }
-
-    public void invokeStaticTests(Class<?> klass) throws InvocationTargetException, IllegalAccessException {
-        System.out.println("Invoking " + klass.getName() + " static tests...");
-        Method[] methods = klass.getMethods();
-        for (Method method : methods) {
-            if (method.getAnnotation(org.junit.Test.class) != null) {
-                System.out.print(method.getName() + ": ");
-                method.invoke(null);
-                System.out.println();
-            }
-        }
     }
 
     public static void main(String[] args) throws Exception {

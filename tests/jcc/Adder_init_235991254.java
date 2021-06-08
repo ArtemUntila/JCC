@@ -12,7 +12,7 @@ public class Adder_init_235991254 {
     }
 
     @Test
-    public static void testbb0() throws Throwable {
+    public  void testbb0() throws Throwable {
         Adder term496 = new Adder();
         System.out.println("Hello there");
     }
