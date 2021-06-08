@@ -1,9 +1,9 @@
 package jcc;
 
+import org.junit.runner.JUnitCore;
+
 import javax.tools.*;
 import java.io.*;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.net.URI;
 import java.nio.file.Files;
 import java.util.*;
@@ -14,10 +14,13 @@ import java.util.*;
 
 public class Snatch {
 
-    private List<ClassJavaFileObject> getGeneratedClasses(File file) throws IOException {
+    private List<ClassJavaFileObject> getGeneratedClasses(File javaFile) throws IOException {
 
-        String program = getProgramText(file);
-        String name = getJavaFileName(file);
+        String name = javaFile.getName();
+        if (!name.endsWith(".java")) throw new IllegalArgumentException();
+        name = name.substring(0, name.length() - 5); // without ".java"
+
+        String program = getProgramText(javaFile);
 
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
 
@@ -70,36 +73,24 @@ public class Snatch {
         List<String> list = snatch.getTestsNames();
         list.forEach(System.out::println);
         CompiledClassLoader classLoader = snatch.getCompiledClassLoader();
-        for (String name : list) {
+        Class<?>[] classes = new Class[list.size()];
+        /*for (String name : list) {
             Class<?> klass = classLoader.loadClass(name);
-            snatch.invokeStaticTests(klass);
+            JUnitCore.runClasses(classes);
+        }*/
+        for (int i = 0; i < list.size(); i++) {
+            classes[i] = classLoader.loadClass(list.get(i));
         }
-    }
-
-    public String getJavaFileName(File javaFile) {
-        return javaFile.getName().replace(".java", "");
+        JUnitCore.runClasses(classes);
     }
 
     public String getProgramText(File program) throws IOException {
         List<String> lines = Files.readAllLines(program.toPath());
         StringBuilder sb = new StringBuilder();
         for (String line : lines) {
-            if (line.contains("package")) continue;
             sb.append(line).append('\n');
         }
         return sb.toString();
-    }
-
-    public void invokeStaticTests(Class<?> klass) throws InvocationTargetException, IllegalAccessException {
-        System.out.println("\nInvoking " + klass.getName() + " static tests...");
-        Method[] methods = klass.getMethods();
-        for (Method method : methods) {
-            if (method.getAnnotation(org.junit.Test.class) != null) {
-                System.out.print(method.getName() + ": ");
-                method.invoke(null);
-                System.out.println();
-            }
-        }
     }
 
     public static class StringJavaFileObject extends SimpleJavaFileObject {
