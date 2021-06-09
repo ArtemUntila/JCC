@@ -4,9 +4,7 @@ import org.junit.runner.JUnitCore;
 
 import javax.tools.*;
 import java.io.*;
-import java.net.MalformedURLException;
 import java.net.URI;
-import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.util.*;
@@ -19,9 +17,8 @@ public class Snatch {
 
     private final URLClassLoader baseClassLoader;
 
-    public Snatch(String absoluteJarPath) throws MalformedURLException {
-        this.baseClassLoader = new URLClassLoader(new URL[]{ new URL("file:" + absoluteJarPath) });
-        System.setProperty("java.class.path", System.getProperty("java.class.path") + ';' + absoluteJarPath);
+    public Snatch(URLClassLoader baseClassLoader) {
+        this.baseClassLoader = baseClassLoader;
     }
 
     private List<ClassJavaFileObject> getGeneratedClasses(File javaFile) throws IOException {
@@ -54,6 +51,7 @@ public class Snatch {
         File directory = new File(directoryPath);
         if (!directory.isDirectory()) throw new IllegalArgumentException();
         File[] files = directory.listFiles();
+        Objects.requireNonNull(files);
         for (File file : files) {
             if (!file.isDirectory()) {
                 this.generatedClassesList.addAll(getGeneratedClasses(file));
@@ -77,16 +75,17 @@ public class Snatch {
         return new CompiledClassLoader(getGeneratedClassesList());
     }
 
-    public static void main(String[] args) throws Exception {
-        Snatch snatch = new Snatch("jcc-test.jar");
-        snatch.generateAll("tests");
-        List<String> list = snatch.getTestsNames();
+    public void main() throws IOException, ClassNotFoundException {
+        generateAll("tests");
+        List<String> list = getTestsNames();
         list.forEach(System.out::println);
-        CompiledClassLoader classLoader = snatch.getCompiledClassLoader();
+        CompiledClassLoader classLoader = getCompiledClassLoader();
         for (String name : list) {
             Class<?> klass = classLoader.loadClass(name);
             JUnitCore.runClasses(klass);
         }
+        Class<?> klass = classLoader.loadClass("jcc.Adder");
+        Arrays.stream(klass.getMethods()).forEach(s -> System.out.println(s.getName()));
     }
 
     public String getProgramText(File program) throws IOException {
@@ -140,6 +139,7 @@ public class Snatch {
         }
     }
 
+    @SuppressWarnings({"unchecked", "rawtypes"})
     private static class SimpleJavaFileManager extends ForwardingJavaFileManager {
 
         private final List<ClassJavaFileObject> outputFiles;

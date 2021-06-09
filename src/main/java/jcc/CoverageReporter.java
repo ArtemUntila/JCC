@@ -11,6 +11,7 @@ import org.junit.runner.JUnitCore;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URLClassLoader;
 import java.util.*;
 
 import jcc.Snatch.CompiledClassLoader;
@@ -24,9 +25,9 @@ public class CoverageReporter {
 
     private final List<String> tests;
 
-    public CoverageReporter(String classesPath, String testsPath) throws IOException {
+    public CoverageReporter(URLClassLoader baseClassLoader, String testsPath) throws IOException {
 
-        Snatch snatch = new Snatch(classesPath);
+        Snatch snatch = new Snatch(baseClassLoader);
         snatch.generateAll(testsPath);
 
         this.compiledClassLoader = snatch.getCompiledClassLoader();
@@ -45,6 +46,7 @@ public class CoverageReporter {
         String fullyQualifiedName = "jcc.Adder";
         System.out.println("jcc/Adder.class" + " - " + fullyQualifiedName);
         original = compiledClassLoader.getResourceAsStream("jcc/Adder.class");
+        Objects.requireNonNull(original);
         final Instrumenter instr = new Instrumenter(runtime);
         final byte[] instrumented = instr.instrument(original, fullyQualifiedName);
         original.close();
@@ -74,6 +76,7 @@ public class CoverageReporter {
 
         for (String className : classes) {
             original = compiledClassLoader.getResourceAsStream(className);
+            Objects.requireNonNull(original);
             analyzer.analyzeClass(original, getFullyQualifiedName(className));
             original.close();
         }
@@ -111,10 +114,6 @@ public class CoverageReporter {
         final Integer covered = counter.getCoveredCount();
         final Integer total = counter.getTotalCount();
         System.out.printf("%s of %s %s covered%n", covered, total, unit);
-    }
-
-    public static void main(String[] args) throws Exception {
-        new CoverageReporter("jcc-test.jar", "tests").execute();
     }
 
     public class MemoryClassLoader extends ClassLoader {
