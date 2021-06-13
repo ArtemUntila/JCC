@@ -1,11 +1,11 @@
-package jcc;
+package jcc1;
 
 import java.lang.Throwable;
 import java.lang.IllegalStateException;
 import org.junit.Test;
-import jcc.Adder;
+import jcc1.Multiplexer;
 
-public class Adder_print_306551973 {
+public class Multiplexer_init_1848024818 {
 
     public <T> T unknown() {
         throw new IllegalStateException();
@@ -13,8 +13,7 @@ public class Adder_print_306551973 {
 
     @Test
     public  void testbb0() throws Throwable {
-        Adder term488 = new Adder();
-        term488.print();
+        Multiplexer term528 = new Multiplexer();
     }
 
 };
