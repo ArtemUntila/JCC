@@ -11,7 +11,6 @@ import org.jacoco.core.runtime.RuntimeData;
 import kex.TestsCompiler.CompiledClassLoader;
 import org.junit.runner.JUnitCore;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -28,16 +27,16 @@ public class CoverageReporter {
 
     private final List<String> tests;
 
-    private final String testsPackage;
+    private final String pkg;
 
-    public CoverageReporter(String testsPackage, URLClassLoader urlClassLoader) throws IOException {
-        TestsCompiler testsCompiler = new TestsCompiler(urlClassLoader);
+    public CoverageReporter(String testsPackage, URLClassLoader urlClassLoader) {
+        TestsCompiler testsCompiler = new TestsCompiler();
         testsCompiler.generateAll("tests/" + testsPackage);
 
-        this.compiledClassLoader = testsCompiler.getCompiledClassLoader();
-        this.instrAndTestsClassLoader = new MemoryClassLoader(compiledClassLoader);
-        this.tests = testsCompiler.getTestsNames();
-        this.testsPackage = testsPackage;
+        compiledClassLoader = testsCompiler.getCompiledClassLoader(urlClassLoader);
+        instrAndTestsClassLoader = new MemoryClassLoader(compiledClassLoader);
+        tests = testsCompiler.getTestsNames();
+        pkg = testsPackage;
     }
 
     public String execute(String analyzeLevel) throws Exception {
@@ -48,8 +47,9 @@ public class CoverageReporter {
             String[] pair = canonicalName.split(", ");
             String klass = pair[0].replace("klass=", "");
             coverageBuilder = getCoverageBuilder(Collections.singletonList(klass + ".class"));
-            if (analyzeLevel.startsWith("CLASS"))
+            if (analyzeLevel.startsWith("CLASS")) {
                 result = getClassCoverage(coverageBuilder);
+            }
             else {
                 String method = pair[1].replace("method=", "");
                 result = getMethodCoverage(coverageBuilder, method);
@@ -63,7 +63,7 @@ public class CoverageReporter {
             while(jarEntries.hasMoreElements()) {
                 JarEntry jarEntry = jarEntries.nextElement();
                 String name = jarEntry.getName();
-                if (name.startsWith(this.testsPackage + '/') && name.endsWith(".class")) {
+                if (name.startsWith(pkg + '/') && name.endsWith(".class")) {
                     classes.add(name);
                 }
             }
@@ -73,7 +73,7 @@ public class CoverageReporter {
         return result;
     }
 
-    public CoverageBuilder getCoverageBuilder(List<String> classes) throws Exception {
+    private CoverageBuilder getCoverageBuilder(List<String> classes) throws Exception {
 
         final IRuntime runtime = new LoggerRuntime();
 
@@ -127,15 +127,17 @@ public class CoverageReporter {
     }
 
     private String getMethodCoverage(CoverageBuilder coverageBuilder, String method) {
-        for (final IMethodCoverage mc : coverageBuilder.getClasses().iterator().next().getMethods())
-            if (mc.getName().equals(method))
+        for (final IMethodCoverage mc : coverageBuilder.getClasses().iterator().next().getMethods()) {
+            if (mc.getName().equals(method)) {
                 return getCommonCounters("method", method, mc);
+            }
+        }
         return null;
     }
 
     private String getPackageCoverage(CoverageBuilder coverageBuilder) {
-        IPackageCoverage pc = new PackageCoverageImpl(this.testsPackage, coverageBuilder.getClasses(), coverageBuilder.getSourceFiles());
-        return getCommonCounters("package", this.testsPackage, pc) +
+        IPackageCoverage pc = new PackageCoverageImpl(pkg, coverageBuilder.getClasses(), coverageBuilder.getSourceFiles());
+        return getCommonCounters("package", pkg, pc) +
                 getCounter("methods", pc.getMethodCounter()) +
                 getCounter("classes", pc.getClassCounter());
     }

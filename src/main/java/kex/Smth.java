@@ -14,6 +14,6 @@ public class Smth {
         //System.out.println(coverageReporter.execute("METHOD(klass=jcc1/Adder, method=sum)"));
         //System.out.println(coverageReporter.execute("CLASS(klass=jcc1/Adder)"));
         //System.out.println(coverageReporter.execute("CLASS(klass=jcc1/Multiplexer)"));
-        System.out.println(coverageReporter.execute("@Pascfer"));
+        System.out.println(coverageReporter.execute("nothing@Package"));
     }
 }
