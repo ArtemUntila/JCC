@@ -1,0 +1,27 @@
+Coverage of package scan:
+25 of 30 instructions covered = 83.33%
+0 of 0 branches covered
+4 of 6 lines covered = 66.67%
+2 of 2 complexity covered = 100.00%
+2 of 2 methods covered = 100.00%
+1 of 1 classes covered = 100.00%
+
+
+Coverage of class scan/Finder:
+25 of 30 instructions covered = 83.33%
+0 of 0 branches covered
+4 of 6 lines covered = 66.67%
+2 of 2 complexity covered = 100.00%
+2 of 2 methods covered = 100.00%
+
+Coverage of method <init>:
+3 of 3 instructions covered = 100.00%
+0 of 0 branches covered
+1 of 1 lines covered = 100.00%
+1 of 1 complexity covered = 100.00%
+
+Coverage of method find:
+22 of 27 instructions covered = 81.48%
+0 of 0 branches covered
+3 of 5 lines covered = 60.00%
+1 of 1 complexity covered = 100.00%

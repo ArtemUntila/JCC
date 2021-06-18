@@ -39,15 +39,15 @@ public class CoverageReporter {
         pkg = testsPackage;
     }
 
-    public String execute(String analyzeLevel) throws Exception {
-        String canonicalName = analyzeLevel.replaceAll("[()]|(CLASS|METHOD)", "");
+    public String execute(String analysisLevel) throws Exception {
+        String canonicalName = analysisLevel.replaceAll("[()]|(CLASS|METHOD)", "");
         CoverageBuilder coverageBuilder;
         String result;
-        if (!canonicalName.equals(analyzeLevel)) {
+        if (!canonicalName.equals(analysisLevel)) {
             String[] pair = canonicalName.split(", ");
             String klass = pair[0].replace("klass=", "");
             coverageBuilder = getCoverageBuilder(Collections.singletonList(klass + ".class"));
-            if (analyzeLevel.startsWith("CLASS")) {
+            if (analysisLevel.startsWith("CLASS")) {
                 result = getClassCoverage(coverageBuilder);
             }
             else {
@@ -121,9 +121,16 @@ public class CoverageReporter {
     }
 
     private String getClassCoverage(CoverageBuilder coverageBuilder) {
-        IClassCoverage cc = coverageBuilder.getClasses().iterator().next();
-        return getCommonCounters("class", cc.getName(), cc) +
-                getCounter("methods", cc.getMethodCounter());
+        StringBuilder sb = new StringBuilder();
+        for (IClassCoverage cc : coverageBuilder.getClasses()) {
+            sb.append(getCommonCounters("class", cc.getName(), cc));
+            sb.append(getCounter("methods", cc.getMethodCounter())).append("\n");
+            for (IMethodCoverage mc : cc.getMethods()) {
+                sb.append(getCommonCounters("method", mc.getName(), mc)).append("\n");
+            }
+            sb.append("\n");
+        }
+        return sb.toString();
     }
 
     private String getMethodCoverage(CoverageBuilder coverageBuilder, String method) {
@@ -139,18 +146,23 @@ public class CoverageReporter {
         IPackageCoverage pc = new PackageCoverageImpl(pkg, coverageBuilder.getClasses(), coverageBuilder.getSourceFiles());
         return getCommonCounters("package", pkg, pc) +
                 getCounter("methods", pc.getMethodCounter()) +
-                getCounter("classes", pc.getClassCounter());
+                getCounter("classes", pc.getClassCounter()) + "\n\n" +
+                getClassCoverage(coverageBuilder);
     }
 
     private String getCounter(final String unit, final ICounter counter) {
         final int covered = counter.getCoveredCount();
         final int total = counter.getTotalCount();
-        return String.format("%s of %s %s covered%n", covered, total, unit);
+        String coverage = String.format("%s of %s %s covered", covered, total, unit);
+        if (total != 0) {
+            coverage += String.format(" = %.02f", (float) covered / total * 100) + '%';
+        }
+        return coverage + '\n';
     }
 
     private String getCommonCounters(final String level, final String name, final ICoverageNode coverage) {
         return String.format("Coverage of %s %s:%n", level, name) +
-                getCounter("instructions", coverage.getInstructionCounter()) +
+                getCounter("instructions", coverage.getInstructionCounter())  +
                 getCounter("branches", coverage.getBranchCounter()) +
                 getCounter("lines", coverage.getLineCounter()) +
                 getCounter("complexity", coverage.getComplexityCounter());

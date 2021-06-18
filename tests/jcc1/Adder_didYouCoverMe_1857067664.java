@@ -17,11 +17,11 @@ public class Adder_didYouCoverMe_1857067664 {
         term492.didYouCoverMe(false);
     }
 
-    @Test
+    /*@Test
     public  void testifelse0() throws Throwable {
         Adder term504 = new Adder();
         term504.didYouCoverMe(true);
-    }
+    }*/
 
 };
 
